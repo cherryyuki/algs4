@@ -53,11 +53,16 @@ public class Heap {
      */
     public static void sort(Comparable[] pq) {
         int n = pq.length;
+
+        // heapify phase
         for (int k = n/2; k >= 1; k--)
             sink(pq, k, n);
-        while (n > 1) {
-            exch(pq, 1, n--);
-            sink(pq, 1, n);
+
+        // sortdown phase
+        int k = n;
+        while (k > 1) {
+            exch(pq, 1, k--);
+            sink(pq, 1, k);
         }
     }
 
@@ -110,7 +115,7 @@ public class Heap {
 }
 
 /******************************************************************************
- *  Copyright 2002-2019, Robert Sedgewick and Kevin Wayne.
+ *  Copyright 2002-2020, Robert Sedgewick and Kevin Wayne.
  *
  *  This file is part of algs4.jar, which accompanies the textbook
  *

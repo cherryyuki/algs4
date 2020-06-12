@@ -59,16 +59,18 @@ import java.util.NoSuchElementException;
  *  &Theta;(log <em>n</em>) time in the worst case, where <em>n</em> is the
  *  number of key-value pairs in the symbol table.
  *  The <em>size</em>, and <em>is-empty</em> operations take &Theta;(1) time.
- *  The <em>keys</em> method takes time proportional to the number of keys
- *  returned by the iterator.
+ *  The <em>keys</em> methods take
+ *  <em>O</em>(log <em>n</em> + <em>m</em>) time, where <em>m</em> is
+ *  the number of keys returned by the iterator.
  *  Construction takes &Theta;(1) time.
  *  <p>
+ *  For alternative implementations of the symbol table API, see {@link ST},
+ *  {@link BinarySearchST}, {@link SequentialSearchST}, {@link BST},
+ *  {@link SeparateChainingHashST}, {@link LinearProbingHashST}, and
+ *  {@link AVLTreeST}.
  *  For additional documentation, see
  *  <a href="https://algs4.cs.princeton.edu/33balanced">Section 3.3</a> of
  *  <i>Algorithms, 4th Edition</i> by Robert Sedgewick and Kevin Wayne.
- *  For other implementations of the same API, see {@link ST}, {@link BinarySearchST},
- *  {@link SequentialSearchST}, {@link BST},
- *  {@link SeparateChainingHashST}, {@link LinearProbingHashST}, and {@link AVLTreeST}.
  *
  *  @author Robert Sedgewick
  *  @author Kevin Wayne
@@ -480,7 +482,7 @@ public class RedBlackBST<Key extends Comparable<Key>, Value> {
         if (key == null) throw new IllegalArgumentException("argument to floor() is null");
         if (isEmpty()) throw new NoSuchElementException("calls floor() with empty symbol table");
         Node x = floor(root, key);
-        if (x == null) return null;
+        if (x == null) throw new NoSuchElementException("argument to floor() is too small");
         else           return x.key;
     }    
 
@@ -506,7 +508,7 @@ public class RedBlackBST<Key extends Comparable<Key>, Value> {
         if (key == null) throw new IllegalArgumentException("argument to ceiling() is null");
         if (isEmpty()) throw new NoSuchElementException("calls ceiling() with empty symbol table");
         Node x = ceiling(root, key);
-        if (x == null) return null;
+        if (x == null) throw new NoSuchElementException("argument to ceiling() is too small");
         else           return x.key;  
     }
 
@@ -522,31 +524,32 @@ public class RedBlackBST<Key extends Comparable<Key>, Value> {
     }
 
     /**
-     * Return the key in the symbol table whose rank is {@code k}.
-     * This is the (k+1)st smallest key in the symbol table. 
+     * Return the key in the symbol table of a given {@code rank}.
+     * This key has the property that there are {@code rank} keys in
+     * the symbol table that are smaller. In other words, this key is the
+     * ({@code rank}+1)st smallest key in the symbol table.
      *
-     * @param  k the order statistic
-     * @return the key in the symbol table of rank {@code k}
-     * @throws IllegalArgumentException unless {@code k} is between 0 and
+     * @param  rank the order statistic
+     * @return the key in the symbol table of given {@code rank}
+     * @throws IllegalArgumentException unless {@code rank} is between 0 and
      *        <em>n</em>–1
      */
-    public Key select(int k) {
-        if (k < 0 || k >= size()) {
-            throw new IllegalArgumentException("argument to select() is invalid: " + k);
+    public Key select(int rank) {
+        if (rank < 0 || rank >= size()) {
+            throw new IllegalArgumentException("argument to select() is invalid: " + rank);
         }
-        Node x = select(root, k);
-        return x.key;
+        return select(root, rank);
     }
 
-    // the key of rank k in the subtree rooted at x
-    private Node select(Node x, int k) {
-        // assert x != null;
-        // assert k >= 0 && k < size(x);
-        int t = size(x.left); 
-        if      (t > k) return select(x.left,  k); 
-        else if (t < k) return select(x.right, k-t-1); 
-        else            return x; 
-    } 
+    // Return key in BST rooted at x of given rank.
+    // Precondition: rank is in legal range.
+    private Key select(Node x, int rank) {
+        if (x == null) return null;
+        int leftSize = size(x.left);
+        if      (leftSize > rank) return select(x.left,  rank);
+        else if (leftSize < rank) return select(x.right, rank - leftSize - 1); 
+        else                      return x.key;
+    }
 
     /**
      * Return the number of keys in the symbol table strictly less than {@code key}.
@@ -721,6 +724,7 @@ public class RedBlackBST<Key extends Comparable<Key>, Value> {
             String key = StdIn.readString();
             st.put(key, i);
         }
+        StdOut.println();
         for (String s : st.keys())
             StdOut.println(s + " " + st.get(s));
         StdOut.println();
@@ -728,7 +732,7 @@ public class RedBlackBST<Key extends Comparable<Key>, Value> {
 }
 
 /******************************************************************************
- *  Copyright 2002-2019, Robert Sedgewick and Kevin Wayne.
+ *  Copyright 2002-2020, Robert Sedgewick and Kevin Wayne.
  *
  *  This file is part of algs4.jar, which accompanies the textbook
  *
